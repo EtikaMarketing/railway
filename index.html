@@ -63,6 +63,21 @@
     <h1>National Comp Cocktail Party 2025</h1>
     <p class="subtitle">CorVel Marketing Cloud Next — form embed test</p>
 
+    <!-- Fix: MC Next embed script overwrites Element.prototype.attachShadow before its own
+         isNative() check runs, triggering "native functions cannot be overwritten".
+         This guard preserves the native reference so the check passes. -->
+    <script>
+      (function() {
+        var native = Element.prototype.attachShadow;
+        Object.defineProperty(Element.prototype, 'attachShadow', {
+          get: function() { return native; },
+          set: function() {},   // discard the wrapper write silently
+          configurable: true,
+          enumerable: true
+        });
+      })();
+    </script>
+
     <!-- MC Next Form Embed — National Comp Cocktail Party 2025 (MCGKLT5IR7AJF7BDALXIIW2SNLAA) -->
     <script async="async" src="https://corvel.my.site.com/lp/assets/scripts/external-forms-host.min.js"></script>
     <script async="async" src="https://corvel.my.site.com/lp/assets/lightning_out_embed/prod/en-US/MCGKLT5IR7AJF7BDALXIIW2SNLAA.js" onload="window.sfdc_forms?sfdc_forms.init():window.sfdc_forms={loReady:!0}"></script>
