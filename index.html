@@ -63,15 +63,28 @@
     <h1>National Comp Cocktail Party 2025</h1>
     <p class="subtitle">CorVel Marketing Cloud Next — form embed test</p>
 
-    <!-- Fix: MC Next embed script overwrites Element.prototype.attachShadow before its own
-         isNative() check runs, triggering "native functions cannot be overwritten".
-         This guard preserves the native reference so the check passes. -->
+    <!-- Diagnostic + fix for Lightning Out isNative check -->
     <script>
       (function() {
-        var native = Element.prototype.attachShadow;
-        Object.defineProperty(Element.prototype, 'attachShadow', {
-          get: function() { return native; },
-          set: function() {},   // discard the wrapper write silently
+        var as = Element.prototype.attachShadow;
+        // Log what we captured — if this shows non-native code, something ran before us
+        console.log('[guard] attachShadow at capture:', as ? as.toString().slice(0, 120) : 'UNDEFINED');
+
+        var nativeODP = Object.defineProperty;
+
+        // Block rewrites via Object.defineProperty
+        Object.defineProperty = function(obj, prop, desc) {
+          if (obj === Element.prototype && prop === 'attachShadow') {
+            console.log('[guard] blocked ODP rewrite of attachShadow');
+            return obj;
+          }
+          return nativeODP.call(Object, obj, prop, desc);
+        };
+
+        // Block rewrites via direct assignment, always return captured value
+        nativeODP.call(Object, Element.prototype, 'attachShadow', {
+          get: function() { return as; },
+          set: function() {},
           configurable: true,
           enumerable: true
         });
